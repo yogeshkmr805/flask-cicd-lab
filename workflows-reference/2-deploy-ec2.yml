@@ -1,0 +1,60 @@
+name: Lab 2 - Test and deploy Flask to EC2
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run tests
+        run: pytest -v
+
+  deploy:
+    needs: test            # runs ONLY if every test passed
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+
+      - name: Copy app files to EC2
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          source: "app.py,requirements.txt,templates"
+          target: "flask-app"
+
+      - name: Install and restart the app on EC2
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            set -e
+            cd ~/flask-app
+            python3 -m venv .venv
+            .venv/bin/pip install --quiet -r requirements.txt
+            if [ -f gunicorn.pid ]; then kill "$(cat gunicorn.pid)" || true; sleep 2; fi
+            APP_VERSION=${{ github.sha }} .venv/bin/gunicorn --bind 0.0.0.0:5000 \
+              --workers 2 --daemon --pid gunicorn.pid app:app
+            sleep 3
+            curl --fail http://localhost:5000/health

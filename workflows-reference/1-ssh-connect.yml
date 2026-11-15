@@ -1,0 +1,29 @@
+name: Lab 1 - SSH connection test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  connect:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+
+      - name: Show all files on the runner
+        run: ls -al
+
+      - name: SSH into EC2 and run commands
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            whoami
+            pwd
+            ls -al
+            mkdir -p yogesh
+            echo "Connected from GitHub Actions run ${{ github.run_number }}"

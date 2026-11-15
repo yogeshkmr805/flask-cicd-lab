@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Flask CI/CD Demo</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #C8102E; color: #fff;
+           display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+    .card { background: #1F1A17; padding: 40px 56px; border-radius: 16px; text-align: center; }
+    h1 { color: #FFC72C; margin-top: 0; }
+    code { color: #FFC72C; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Deployed by GitHub Actions</h1>
+    <p>Flask CI/CD demo is running on EC2.</p>
+    <p>Version: <code>{{ version }}</code></p>
+  </div>
+</body>
+</html>
